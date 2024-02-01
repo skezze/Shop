@@ -8,7 +8,7 @@ public class HomeController : ControllerBase
     public HomeController()
     {
     }
-[HttpGet, Route("[action]")]
+[HttpGet, Route("[action]"),Authorize("Shop.Api")]
     public IActionResult GetHello()
     {
         return Ok(new {message = "hello"});

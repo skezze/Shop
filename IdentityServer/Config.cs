@@ -54,6 +54,11 @@ namespace IdentityServer
                               new Secret("511536EF-F270-4058-80CA-1C89C192F69A".Sha256())
                          },
                     AllowedScopes = { ApiScopesList.ShopApi},
+                    RedirectUris = new[]
+                    {
+                        "https://localhost:7175/signin-oidc}"
+                    },
+                     AllowedCorsOrigins= { "https://localhost:7175" }
                 },
 
             };

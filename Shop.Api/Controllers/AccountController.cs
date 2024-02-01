@@ -23,8 +23,8 @@ public class AccountController : ControllerBase
         _userManager = userManager;
     }
 
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] RegistrationModel model)
+    [HttpPost("get-token")]
+    public async Task<IActionResult> GetToken([FromBody] RegistrationModel model)
     {
         using (var client = _httpClientFactory.CreateClient())
         {

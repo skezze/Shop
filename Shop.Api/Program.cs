@@ -1,11 +1,14 @@
+using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Shop.Data;
 using Shop.Domain.ApiAuthConfiguration;
 using Shop.Domain.Models;
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +38,7 @@ builder.Services.AddAuthentication(options =>
         options.ClientId = ApiAuthConfiguration.ClientId;
         options.ClientSecret = ApiAuthConfiguration.ClientSecret;
         options.ResponseType = ApiAuthConfiguration.ResponseType;
-
+        
         options.SaveTokens = ApiAuthConfiguration.SaveTokens;
 
         options.Scope.Add("Shop.Api");
@@ -44,7 +47,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("ApiScope", policy =>
+    options.AddPolicy("Shop.Api", policy =>
     {
         policy.RequireAuthenticatedUser();
         policy.RequireClaim("scope", "Shop.Api");
@@ -52,7 +55,28 @@ builder.Services.AddAuthorization(options =>
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+var origins = "_origins";
+builder.Services.AddCors(options=>
+{
+   options.AddPolicy(origins, policy =>
+   {
+       policy.AllowAnyHeader();
+       policy.AllowAnyOrigin();
+       policy.AllowAnyMethod();
+       policy.AllowCredentials();
+   });
+});
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme()
+    {
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
+    
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 
 builder.Services.AddHttpClient();
 var app = builder.Build();
@@ -65,6 +89,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(origins);
 
 app.UseAuthentication();
 app.UseAuthorization();
