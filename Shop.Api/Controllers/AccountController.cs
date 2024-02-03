@@ -1,6 +1,4 @@
-﻿using IdentityServer4.Models;
-using Microsoft.AspNetCore.Identity;
-using Shop.Domain;
+﻿using Microsoft.AspNetCore.Identity;
 using Shop.Domain.ApiAuthConfiguration;
 using Shop.Domain.FrontModels;
 using Shop.Domain.Models;
@@ -35,8 +33,7 @@ public class AccountController : ControllerBase
                 ClientId = ApiAuthConfiguration.ClientId,
                 ClientSecret = ApiAuthConfiguration.ClientSecret,
                 Scope = "Shop.Api",
-                GrantType = GrantType.ResourceOwnerPassword,
-                
+                GrantType = ApiAuthConfiguration.Granttype,
                 UserName = model.UserName,
                 Password = model.Password
             };

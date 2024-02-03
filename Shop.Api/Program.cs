@@ -1,12 +1,9 @@
-using IdentityServer4.AccessTokenValidation;
-using IdentityServer4.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Shop.Data;
-using Shop.Domain.ApiAuthConfiguration;
 using Shop.Domain.Models;
 using Swashbuckle.AspNetCore.Filters;
 
@@ -26,22 +23,20 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication(options =>
+builder.Services.AddAuthentication(config =>
     {
-        options.DefaultScheme = "Cookies";
-        options.DefaultChallengeScheme = "oidc";
+        config.DefaultAuthenticateScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+        config.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    .AddCookie("Cookies")
-    .AddOpenIdConnect("oidc", options =>
+    .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = ApiAuthConfiguration.Authority;
-        options.ClientId = ApiAuthConfiguration.ClientId;
-        options.ClientSecret = ApiAuthConfiguration.ClientSecret;
-        options.ResponseType = ApiAuthConfiguration.ResponseType;
-        
-        options.SaveTokens = ApiAuthConfiguration.SaveTokens;
-
-        options.Scope.Add("Shop.Api");
+        options.Authority = "https://localhost:5001";
+        options.Audience = "Shop.Api.Client";
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters {
+            ValidateAudience = false
+        };
     });
 
 
@@ -60,9 +55,7 @@ builder.Services.AddCors(options=>
 {
    options.AddPolicy(origins, policy =>
    {
-       policy.AllowAnyHeader();
-       policy.AllowAnyOrigin();
-       policy.AllowAnyMethod();
+       policy.WithOrigins("https://localhost:5001");
        policy.AllowCredentials();
    });
 });
