@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using IdentityServer4.Models;
+using Microsoft.AspNetCore.Identity;
+using Shop.Application.Services;
 using Shop.Domain.ApiAuthConfiguration;
 using Shop.Domain.FrontModels;
 using Shop.Domain.Models;
@@ -14,11 +16,14 @@ public class AccountController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly UserManager<User> _userManager;
+    private readonly UserService _userService;
 
-    public AccountController(IHttpClientFactory httpClientFactory,UserManager<User> userManager)
+    public AccountController(IHttpClientFactory httpClientFactory,UserManager<User> userManager,
+        UserService userService)
     {
         _httpClientFactory = httpClientFactory;
         _userManager = userManager;
+        _userService = userService;
     }
 
     [HttpPost("get-token")]
@@ -45,6 +50,11 @@ public class AccountController : ControllerBase
                 return BadRequest($"Failed to register user.{tokenResponse.Error}");
             }
 
+            await _userService.Login(new User()
+            {
+                UserName = model.UserName,
+                PasswordHash = model.Password.Sha256()
+            });
             // Далее, если успешно, вы можете вернуть токен или выполнить другие действия
             return Ok(new { access_token = tokenResponse.AccessToken });
         }
@@ -53,9 +63,11 @@ public class AccountController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegistrationModel model)
     {
-        var result = await _userManager.CreateAsync(new User() {
-            UserName = model.UserName,
+
+        var result = await _userService.Register(new User()
+        {
+            UserName = model.UserName
         }, model.Password);
-        return Ok(new {result = result.Succeeded});
+        return Ok(new {result = result});
     }
 }

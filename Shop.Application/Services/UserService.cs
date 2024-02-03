@@ -14,34 +14,36 @@ public class UserService
         _userManager = userManager;
     }
 
-    public async Task<bool> Login(User user)
+    public async Task<IdentityResult> Login(User user)
     {
         var id = await _userManager.GetUserIdAsync(user);
         if (id==string.Empty)
         {
-            return false;
+            return IdentityResult.Failed();
         }
         await _signInManager.SignInAsync(user, isPersistent: true);
-        return true;
+        return IdentityResult.Success;
     }
 
-    public async Task<User?> Register(User user)
+    public async Task<IdentityResult> Register(User user, string password)
     {
         var id = await _userManager.GetUserIdAsync(user);
         if (id!=string.Empty)
         {
-            return null;
+            return IdentityResult.Failed();
         }
-        await _signInManager.SignInAsync(user, isPersistent: true);
-        return user;
+        await _userManager.CreateAsync(new User() {
+            UserName = user.UserName,
+        }, password);
+        return IdentityResult.Success;
     }
-    public async Task<bool> AddUserToRole(User user,string[] roleNames)
+    public async Task<IdentityResult> AddUserToRole(User user,string[] roleNames)
     {
         var result = await _userManager.AddToRolesAsync(user, roleNames);
         if (result.Succeeded)
         {
-            return true;
+            return IdentityResult.Success;
         }
-        return false;
+        return IdentityResult.Failed();
     }
 }
